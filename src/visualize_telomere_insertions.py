@@ -32,7 +32,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plot
 from matplotlib import gridspec
 import numpy as np
-
+import pandas as pd
 
 argument_parser = argparse.ArgumentParser(
   description='This script generates a pdf file for each entry in a bed file.' )
@@ -72,25 +72,25 @@ basepair_colors = { 'A':"#4DE34D", 'C':"#7D7DFF", 'G':"#FFBE52", 'T':"#FF4D4D", 
 class ReferenceBuffer(object):
 
   def __init__( self, filename, chromosome ):
-
+    #ipdb.set_trace()
     self.samtools_call = [ parsed_arguments.samtoolsbin, "faidx", filename ]
     self.chromosome    = chromosome;
     self.offset        = 0
     self.sequence      = ""
 
   def __getitem__( self, pos ):
-
+    #ipdb.set_trace()
     if len(self.sequence) > pos - self.offset >= 0:
 
       return self.sequence[ pos - self.offset ]
 
     else:
 
-      region = "%s:%i-%i" % ( self.chromosome, pos - 1000, pos + 1000 )
+      region = "%s:%i-%i" % ( self.chromosome, max( 1, pos - 1000 ), pos + 1000 )
       call   = self.samtools_call + [ region ]
       output = subprocess.check_output( call )
       self.offset   = max( 0, pos - 1000 )
-      self.sequence = "".join( output.split('\n')[1:] ).upper()
+      self.sequence = "".join( output.decode().split('\n')[1:] ).upper()
 
       return self.sequence[ pos - self.offset ]
 
@@ -335,7 +335,7 @@ def plot_cigars( cigars, sequences, reverses, read_names, read_flags, colored_re
 
 
 def plot_region( region_chrom, region_center, region_left, region_right, plot_title ):
-
+  #ipdb.set_trace()
   region_string = "%s:%i-%i" % ( region_chrom, region_left, region_right )
 
 
@@ -344,12 +344,12 @@ def plot_region( region_chrom, region_center, region_left, region_right, plot_ti
   else:
     samtools_call1   = ( parsed_arguments.samtoolsbin, "view", "-F", "1024", parsed_arguments.control, region_string )
     samtools_output1 = subprocess.check_output( samtools_call1 )
-    samtools_output1 = [ line.split('\t') for line in samtools_output1.split('\n') ]
+    samtools_output1 = [ line.split('\t') for line in samtools_output1.decode().split('\n') ]
     samtools_reads1  = [ line for line in samtools_output1 if len(line) > 5 ]
 
   samtools_call2   = ( parsed_arguments.samtoolsbin, "view", "-F", "1024", parsed_arguments.tumor, region_string )
   samtools_output2 = subprocess.check_output( samtools_call2 )
-  samtools_output2 = [ line.split('\t') for line in samtools_output2.split('\n') ]
+  samtools_output2 = [ line.split('\t') for line in samtools_output2.decode().split('\n') ]
   samtools_reads2  = [ line for line in samtools_output2 if len(line) > 5 ]
 
   annotations = get_annotations( region_string )
@@ -387,7 +387,7 @@ def plot_region( region_chrom, region_center, region_left, region_right, plot_ti
         colored_reads_control = []
 
       plot_histogram( [ parse_cigar( read[5], int(read[3]) ) for read in samtools_reads1 if read[5] != "*" ], ax[0] )
-
+      #ipdb.set_trace()
       plot_cigars( [ parse_cigar( read[5], int(read[3]) ) for read in samtools_reads1 if read[5] != "*"  ],
                    [ get_sequence(read, parsed_arguments.control, clipped_reads_control_dict) for read in samtools_reads1 if read[5] != "*"  ], 
                    [ bool(int(read[1])&0x10) for read in samtools_reads1 if read[5] != "*"  ],
@@ -396,15 +396,24 @@ def plot_region( region_chrom, region_center, region_left, region_right, plot_ti
                    colored_reads_control,
                    ax[1], reference_buffer )
 
-
+     # !keylist_clipped_read_dict= list(clipped_reads_tumor_dict.keys())
+     # sub='HWI-ST1108'
+     # globals().update(locals())
+     # print " ".join(s for s in keylist_clipped_read_dict if sub.lower() in s.lower())
     #plot tumor
     if parsed_arguments.colored_reads_tumor:
       colored_reads_tumor = getColoredReads(parsed_arguments.colored_reads_tumor, region_chrom)
     else:
       colored_reads_tumor = []
-    
-    plot_histogram( [ parse_cigar( read[5], int(read[3]) ) for read in samtools_reads2 if read[5] != "*"  ], ax[2] )
 
+    plot_histogram( [ parse_cigar( read[5], int(read[3]) ) for read in samtools_reads2 if read[5] != "*"  ], ax[2] )
+    #pd.DataFrame(samtools_reads2).loc[:, 1]
+    #!list(map(lambda flag : int(flag) & 0x80, pd.DataFrame(samtools_reads2).loc[:,1].tolist()))
+    #get rid of KEYNOTFOUND indices.
+    indexes_with_seqs=np.where(list(map(lambda seq : seq!='KEYNOTFOUND',[get_sequence(read, parsed_arguments.tumor, clipped_reads_tumor_dict) for read in samtools_reads2 if read[5] != "*"])))[0]
+    samtools_reads2_subset=[samtools_reads2[i] for i in indexes_with_seqs]
+    samtools_reads2 = samtools_reads2_subset
+    #[get_sequence(read, parsed_arguments.tumor, clipped_reads_tumor_dict) for read in samtools_reads2 if read[5] != "*"]
     plot_cigars( [ parse_cigar( read[5], int(read[3]) ) for read in samtools_reads2 if read[5] != "*"  ],
                  [ get_sequence(read, parsed_arguments.tumor, clipped_reads_tumor_dict) for read in samtools_reads2 if read[5] != "*"  ],               
                  [ bool(int(read[1])&0x10) for read in samtools_reads2 if read[5] != "*"  ],
@@ -422,7 +431,7 @@ def plot_region( region_chrom, region_center, region_left, region_right, plot_ti
 
     ax[0].yaxis.set_tick_params( labelleft=True, labelright=True )
     ax[2].yaxis.set_tick_params( labelleft=True, labelright=True )
-
+    #ipdb.set_trace()
     visible_basepairs = [ reference_buffer[i] for i in range( region_left, region_right + 1 ) ]
 
     ax[1].xaxis.set_tick_params( width=0 )
@@ -486,8 +495,18 @@ def get_sequence( read, bamfile, clipped_read_dict=None ):
     elif flag & 0x80:
       read_1_2 = "READ2"
 
-    sequence = clipped_read_dict[read[0] + "_" + read_1_2]
-
+    #import ipdb
+    #ipdb.set_trace()
+    #keylist_clipped_read_dict = [print(v) for v in clipped_read_dict.keys()]
+    #!keylist_clipped_read_dict= list(clipped_read_dict.keys())
+    #sub='HWI-ST1108'
+    #globals().update(locals())
+    #print " ".join(s for s in keylist_clipped_read_dict if sub.lower() in s.lower())
+    try:
+        sequence = clipped_read_dict[read[0] + "_" + read_1_2]
+    except:
+        sequence = "KEYNOTFOUND"
+        return sequence
   else:
 
     read_name = read[0]
@@ -526,8 +545,8 @@ def get_sequence( read, bamfile, clipped_read_dict=None ):
     read_original = [ read for read in read_original if int(read.split("\t")[1])<2000 ]
 
     if len(read_original)!=1:
-      print "multiple primary alignments were found for read " + read_name
-      print read_original
+      print("multiple primary alignments were found for read " + read_name)
+      print(read_original)
 
     read_original = read_original[0].split('\t') 
 
@@ -559,15 +578,23 @@ def getReverseComplement(sequence):
 
 
 def getColoredReads(colored_read_file, chrom):
+  #import ipdb
+  #ipdb.set_trace()
+  #read_name, mate_chr, mate_position, mate_mapq, mate_strand = np.loadtxt(colored_read_file, dtype = str, delimiter='\t',  skiprows=1, unpack=True)
+  read_name, mate_chr, mate_position, mate_mapq, mate_strand = pd.read_csv(colored_read_file, sep='\t').to_numpy().transpose()
 
-  read_name, mate_chr, mate_position, mate_mapq, mate_strand = np.loadtxt(colored_read_file, dtype = str, delimiter='\t', comments='', skiprows=1, unpack=True)
 
   #mate_mapq = [int(i) for i in mate_mapq]
   mate_mapq = [int(i) if i!='' else 0 for i in mate_mapq]
 
   #only keep reads with mapping quality larger than 30 and on chromosome
   indices1 = [i for i,v in enumerate(mate_mapq) if v > 30]
-  indices2 = [i for i,v in enumerate(mate_chr) if v == chrom]
+  #import ipdb
+  #ipdb.set_trace()
+  #indices2 = [i for i,v in enumerate(mate_chr) if v == chrom]
+
+  indices2 = (np.where(mate_chr == chrom))[0].tolist()
+
   indices = list(set(indices1) & set(indices2))
   colored_reads = [read_name[i] + "_" + mate_strand[i] for i in indices]
 
@@ -576,10 +603,13 @@ def getColoredReads(colored_read_file, chrom):
 
 def getClippedSequences(clipped_read_file):
   #makes a dictionary of clipped reads (read id (read name and read1/2) and sequence of entire read)
-
+  #import ipdb
+  #ipdb.set_trace()
   try:
-    read_names, read_1_2, sequences = np.loadtxt(clipped_read_file, dtype = str, delimiter='\t', comments='', skiprows=1, unpack=True, usecols=(1,2,9))
-    
+    #read_names, read_1_2, sequences = np.loadtxt(clipped_read_file, dtype = str, delimiter='\t',  skiprows=1, unpack=True, usecols=(1,2,9))
+    read_names, read_1_2, sequences = pd.read_csv(clipped_read_file, sep='\t').to_numpy().transpose()[(1,2,9),]
+
+
     read_ids = [a + '_' + b for a,b in zip(read_names,read_1_2)]
 
     clipped_reads = dict(zip(read_ids, sequences))
@@ -623,6 +653,8 @@ if parsed_arguments.bed:
         continue
 
       plot_title = "%s %s:%s" % ( pid, region_chrom, region_center )
+      import ipdb
+      #ipdb.set_trace()
 
       plot_region( region_chrom, region_center, region_left, region_right, plot_title )
 

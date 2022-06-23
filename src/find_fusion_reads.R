@@ -5,7 +5,12 @@
 #              - extracts clipped sequence and checks if it contains telomere repeats
 #              - saves all reads in a table (read_name, clipped_sequence, position_of_clip, ...)
 
-
+#ml R samtools && R --no-save --slave --args 
+#/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/PASEFS_telomere_insertions_candidate_regions.tsv
+#/data/CCRBioinfo/dalgleishjl/sv_mapping/gridss_pipeline/bam_hg38/PASEFS_N.bam
+#/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/clipped_reads/PASEFS_N.clipped_reads.tsv
+#/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R
+#< /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/find_fusion_reads.R
 
 # get commandline arguments
 commandArgs = commandArgs()
@@ -13,7 +18,10 @@ candidate_region_file = commandArgs[5]
 bamfile = commandArgs[6]
 outfile = commandArgs[7]
 function_file = commandArgs[8]
-
+function_file = "/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R"
+candidate_region_file = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/PASEFS_telomere_insertions_candidate_regions.tsv"
+bamfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/gridss_pipeline/bam_hg38/PASEFS_N.bam"
+outfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/clipped_reads/PASEFS_N.clipped_reads.tsv"
 library(GenomicAlignments)
 library(stringr)
 
@@ -126,7 +134,8 @@ for(window in candidate_regions$window){
     #extract SA Tag with position and strand of primary alignment
     tags = system(paste0(view_window_command, "| cut -f 12-"), intern=TRUE)    
     SA_tag = unlist(regmatches(tags,gregexpr("SA:Z:[^,]+,\\d+,[-\\+]",tags)))
-    
+    #print(tags)
+    browser()
     chr_primary_align = gsub(",\\d+,[-\\+]", "", gsub("SA:Z:", "", SA_tag))
     
     coord_primary_align = gsub(",[-\\+]", "", gsub("SA:Z:[^,]+,", "", SA_tag))

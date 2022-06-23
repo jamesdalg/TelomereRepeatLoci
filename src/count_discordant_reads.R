@@ -5,8 +5,14 @@
 #              - gets the number of discordant reads in 1 kb windows
 #              - merges adjacent windows with discordant reads in the tumor sample
 #              - output: table for each pid containing raw discordant read counts for tumor and control
-
-
+#ml R && R  --no-save --slave --args
+#-t   /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_tumor_discordant_reads_filtered_with_mapq.tsv   
+#-c   /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_control_discordant_reads_filtered_with_mapq.tsv   
+#-b /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/blacklists/PCAWG_tel_ins_blacklist.tsv
+#-o /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_discordant_reads_1_kb_windows.tsv  
+#-f /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R 
+#< /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/count_discordant_reads.R;
+#options(error=browser)
 library("optparse")
 library("data.table")
 
@@ -25,12 +31,22 @@ option_list = list(
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
+#-t   /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_tumor_discordant_reads_filtered_with_mapq.tsv   
+#-c   /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_control_discordant_reads_filtered_with_mapq.tsv   
+#-b /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/blacklists/PCAWG_tel_ins_blacklist.tsv
+#-o /data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_discordant_reads_1_kb_windows.tsv  
+#-f /data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R 
 
 discordantReadFileTumor = opt$discordantReadFileTumor
 discordantReadFileControl = opt$discordantReadFileControl
 blacklist_file = opt$blacklist
 outFile = opt$outFile
 function_file = opt$function_file
+# discordantReadFileTumor = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_tumor_discordant_reads_filtered_with_mapq.tsv"
+# discordantReadFileControl = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_control_discordant_reads_filtered_with_mapq.tsv"
+# blacklist_file = "/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/blacklists/PCAWG_tel_ins_blacklist.tsv"
+# outFile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASKZZ_telomerehunter/PASKZZ/PASKZZ_discordant_reads_1_kb_windows.tsv"
+# function_file = "/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R"
 
 source(function_file)
 

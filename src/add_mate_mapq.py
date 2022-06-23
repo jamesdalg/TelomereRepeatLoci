@@ -37,6 +37,8 @@ for opt, arg in myopts:
 
 # list of chromosomes accepted for output
 chromosome_list = [ str(i) for i in range(1,22+1) ] + ["X","Y"]
+chromosome_list_with_chr = ["chr" + s for s in chromosome_list]
+chromosome_list = chromosome_list_with_chr
 
 #########################################################################################################################################
 
@@ -52,7 +54,6 @@ telomere_insertion_table = numpy.genfromtxt(telomere_insertion_table_file, skip_
 # ----------------------------------------------------------------
 
 output = '\t'.join(["read_name", "mate_chr", "mate_position", "mate_mapq", "mate_strand"])
-
 for read in telomere_insertion_table:
 
   read_name = read[0]
@@ -60,15 +61,35 @@ for read in telomere_insertion_table:
   position = str(read[2])
 
   # skip mates mapped to decoy sequences
-  if chromosome not in chromosome_list:
-    continue
 
+  chromosome=chromosome.decode('ascii')
+  if chromosome not in chromosome_list:
+    # if "chrUn" not in str(chromosome):
+    #   if "random" not in str(chromosome):
+    #     if "chrM" not in str(chromosome):
+    #       import ipdb
+    #       ipdb.set_trace()
+    #       print(type(chromosome));
+    #       print(type(str(chromosome)));
+    #       print(type(chromosome_list));
+    #       print("lost in decoy" + str(chromosome));
+    #       print(str(chromosome_list));
+    continue
+  read_name = read_name.decode('ascii')
+  #import ipdb
+  #ipdb.set_trace()
+  #print(type(chromosome));
   # get original read of mate (skip secondary and supplementary alignments)
-  extract_mq_command = "samtools view -F 2304 " + alignment_bam_file + " " + chromosome + ":" + position + "-" + position + "| grep  \"" + read_name + "\""   # | cut -f 5
+  extract_mq_command = "samtools view -F 2304 " + alignment_bam_file + " " + chromosome + ":" + position + "-" + position + "| grep  \"" + read_name + "\" #   | cut -f 5";
+  #print(extract_mq_command);
 
   original_read = os.popen(extract_mq_command).read().rstrip()
-
+#  import ipdb
+#  ipdb.set_trace()
+ # print(original_read);
+ # print()
   original_read_list = original_read.split("\t")
+  #print(original_read_list);
 
   try:
     mapq = original_read_list[4]
@@ -84,7 +105,7 @@ for read in telomere_insertion_table:
   except:
     strand = ''
 
-
+  #print(mapq)
   read_list = [read_name, chromosome, position, mapq, strand]
 
   output += '\n' + '\t'.join(read_list) 
