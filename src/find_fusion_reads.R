@@ -18,10 +18,10 @@ candidate_region_file = commandArgs[5]
 bamfile = commandArgs[6]
 outfile = commandArgs[7]
 function_file = commandArgs[8]
-function_file = "/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R"
-candidate_region_file = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/PASEFS_telomere_insertions_candidate_regions.tsv"
-bamfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/gridss_pipeline/bam_hg38/PASEFS_N.bam"
-outfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/clipped_reads/PASEFS_N.clipped_reads.tsv"
+# function_file = "/data/CCRBioinfo/dalgleishjl/TelomereRepeatLoci/src/functions.R"
+# candidate_region_file = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/PASEFS_telomere_insertions_candidate_regions.tsv"
+# bamfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/gridss_pipeline/bam_hg38/PASEFS_N.bam"
+# outfile = "/data/CCRBioinfo/dalgleishjl/sv_mapping/PASEFS_telomerehunter/PASEFS/clipped_reads/PASEFS_N.clipped_reads.tsv"
 library(GenomicAlignments)
 library(stringr)
 
